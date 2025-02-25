@@ -2,3 +2,4 @@ Flask
 tensorflow>=2.15
 Pillow
 numpy
+gunicorn
