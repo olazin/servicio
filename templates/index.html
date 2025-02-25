@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clasificador de Basura</title>
+</head>
+<body>
+    <h1>Clasificador de Basura</h1>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="file">Selecciona una imagen:</label>
+        <input type="file" id="file" name="file" accept="image/*" required>
+        <button type="submit">Subir y predecir</button>
+    </form>
+
+    <h2>Predicción:</h2>
+    <p id="predicted_class">Esperando imagen...</p>
+
+    <script>
+        document.getElementById("uploadForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            var formData = new FormData();
+            formData.append("file", document.getElementById("file").files[0]);
+
+            fetch("/predict", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.predicted_class) {
+                    document.getElementById("predicted_class").textContent = "La predicción es: " + data.predicted_class;
+                } else {
+                    document.getElementById("predicted_class").textContent = "Error: " + data.error;
+                }
+            })
+            .catch(error => {
+                document.getElementById("predicted_class").textContent = "Hubo un error al procesar la imagen.";
+            });
+        });
+    </script>
+</body>
+</html>

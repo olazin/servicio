@@ -1,25 +1,50 @@
-import os
-from flask import Flask, request, jsonify
-from tensorflow.keras.models import load_model
+from flask import Flask, request, render_template, jsonify
+import tensorflow as tf
 from tensorflow.keras.preprocessing import image
+import base64
 import numpy as np
+from PIL import Image
+from io import BytesIO
+import os
+
 
 # Configuración
 app = Flask(__name__)
-model_path = 'model\clasificador_basura_model.h5'  # Ruta al modelo guardado
 UPLOAD_FOLDER = 'uploads'  # Carpeta para las imágenes cargadas
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
+
+# Verificar si la extensión de la imagen es válida
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 # Cargar el modelo
-model = load_model(model_path)
+model = tf.keras.models.load_model("model/clasificador_basura_model.h5")
 
 # Configurar la carpeta de carga de imágenes
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 
-# Verificar si la extensión de la imagen es válida
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+# Función para procesar la imagen
+def procesar_imagen(img):
+    
+    # Redimensionar la imagen al tamaño esperado por el modelo (ajusta según lo que tu modelo necesita)
+    img = img.resize((150, 150))  # Ajustamos al tamaño correcto
+
+    img = np.array(img)
+    
+    # Normalizar la imagen (según cómo tu modelo fue entrenado)
+    img = img / 255.0
+    
+    # Agregar dimensión para que sea compatible con el modelo
+    img = np.expand_dims(img, axis=0)
+    
+    return img
+
+# Ruta para mostrar la página principal
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 # Ruta para cargar y predecir la imagen
 @app.route('/predict', methods=['POST'])
@@ -63,4 +88,5 @@ if __name__ == '__main__':
         os.makedirs(UPLOAD_FOLDER)
     
     # Ejecutar el servidor Flask
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)
+
